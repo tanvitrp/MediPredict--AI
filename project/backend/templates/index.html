@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Medical Disease Prediction</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js Graph Integration -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="bg-blobs"></div>
+    
+    <div class="container">
+        <!-- Navigation -->
+        <nav>
+            <div class="logo"><i class="fa-solid fa-staff-snake"></i> MediPredict AI</div>
+            <div class="nav-links">
+                <button id="history-btn" class="hidden" onclick="openModal('history-modal')"><i class="fa-solid fa-book-medical"></i> My Library</button>
+                <button id="eval-nav-btn" class="hidden" onclick="openModal('evaluation-modal')"><i class="fa-solid fa-chart-line"></i> Model Evaluation</button>
+                <span id="user-greeting" class="hidden" style="margin-left: 1rem;">Hello, User</span>
+                <button id="logout-btn" class="hidden"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </nav>
+
+        <!-- Authentication View -->
+        <main id="auth-view" class="hero fade-in">
+            <h1 style="color: var(--danger); font-size:1.2rem; border:1px solid var(--danger); padding:10px; background:rgba(239, 68, 68, 0.1); border-radius:8px; margin-bottom:20px;">
+                <i class="fa-solid fa-triangle-exclamation"></i> ACADEMIC USE ONLY. NOT FOR REAL MEDICAL DIAGNOSIS.
+            </h1>
+            <h1>Predict Diseases with AI</h1>
+            <p>Multimodal diagnostics using Text, Voice, and Image inputs.</p>
+            
+            <div class="glass-panel auth-form" id="login-form-container">
+                <h2>Login</h2>
+                <form id="login-form" class="mt-2">
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                </form>
+                <p class="toggle-auth" id="show-register">Don't have an account? Register</p>
+            </div>
+
+            <div class="glass-panel auth-form hidden" id="register-form-container">
+                <h2>Register</h2>
+                <form id="register-form" class="mt-2">
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" id="reg-username" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Email</label>
+                        <input type="email" id="reg-email" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" id="reg-password" required>
+                    </div>
+                    <button type="submit" class="btn">Register</button>
+                </form>
+                <p class="toggle-auth" id="show-login">Already have an account? Login</p>
+            </div>
+        </main>
+
+        <!-- Dashboard View -->
+        <main id="dashboard-view" class="hidden fade-in">
+            <div class="dashboard-shell">
+                <aside id="tool-sidebar" class="tool-sidebar">
+                    <div class="sidebar-header">
+                        <h2>Other Systems</h2>
+                        <button id="sidebar-close" class="icon-btn" type="button" aria-label="Close sidebar">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <button class="sidebar-tool" type="button" onclick="openModal('text-modal')">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <span>
+                            <strong>Text Based Prediction</strong>
+                            <small>Select symptoms manually.</small>
+                        </span>
+                    </button>
+                    <button class="sidebar-tool" type="button" onclick="openModal('voice-modal')">
+                        <i class="fa-solid fa-microphone-lines"></i>
+                        <span>
+                            <strong>Voice Based Prediction</strong>
+                            <small>Speak symptoms and analyze.</small>
+                        </span>
+                    </button>
+                    <button class="sidebar-tool" type="button" onclick="openModal('evaluation-modal')">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>
+                            <strong>Model Evaluation</strong>
+                            <small>Metrics, Confusion Matrix & Plots.</small>
+                        </span>
+                    </button>
+                </aside>
+
+                <section class="skin-main">
+                    <button id="sidebar-toggle" class="sidebar-toggle" type="button">
+                        <i class="fa-solid fa-bars"></i>
+                        Text & Voice
+                    </button>
+                    <div class="glass-panel skin-panel">
+                        <div class="skin-heading">
+                            <i class="fa-solid fa-microscope"></i>
+                            <h2>Skin Based Prediction System</h2>
+                            <p>Upload a clear image of the affected skin area.</p>
+                        </div>
+
+                        <div class="file-upload-wrapper">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem; margin-bottom:0.5rem; color:var(--primary-color);"></i>
+                            <p>Drag & Drop or Click to Select Image</p>
+                            <input type="file" id="skin-image-upload" accept="image/png, image/jpeg">
+                        </div>
+                        <div class="webcam-panel">
+                            <video id="webcam-video" autoplay playsinline class="hidden"></video>
+                            <canvas id="webcam-canvas" class="hidden"></canvas>
+                            <div class="webcam-controls">
+                                <button class="btn secondary-btn" type="button" id="start-camera-btn"><i class="fa-solid fa-camera"></i> Open Webcam</button>
+                                <button class="btn secondary-btn hidden" type="button" id="capture-photo-btn"><i class="fa-solid fa-circle-dot"></i> Capture Photo</button>
+                                <button class="btn secondary-btn hidden" type="button" id="stop-camera-btn"><i class="fa-solid fa-video-slash"></i> Close Webcam</button>
+                            </div>
+                        </div>
+                        <p id="file-name-display" class="text-center" style="margin-bottom:1rem;color:var(--primary-color)"></p>
+                        
+                        <button class="btn" id="predict-image-btn">Analyze Image</button>
+
+                        <div id="image-results" class="results-card hidden">
+                            <h3>Result:</h3>
+                            <div class="disease-title" id="image-pred-title">--</div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" id="image-pred-bar"></div>
+                            </div>
+                            <p id="image-pred-acc" style="font-size: 0.8rem; text-align:right; margin-bottom: 1rem;">0%</p>
+                            <div id="image-pred-details" style="font-size:0.9rem; color:var(--text-secondary)"></div>
+                            
+                            <div class="report-controls" style="margin-top: 1rem;">
+                                <select id="image-lang-select">
+                                    <option value="en">English (Default)</option>
+                                    <option value="hi">Hindi</option>
+                                    <option value="kn">Kannada</option>
+                                </select>
+                                <button class="btn" style="flex:1;" id="translate-image-btn"><i class="fa-solid fa-language"></i> Translate</button>
+                                <button class="btn" style="flex:1;" id="download-image-report"><i class="fa-solid fa-download"></i> PDF Report</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Text / Symptom Modal -->
+    <div id="text-modal" class="modal">
+        <div class="glass-panel modal-content">
+            <button class="close-btn" onclick="closeModal('text-modal')">&times;</button>
+            <h2>Symptom Classification</h2>
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Select symptoms currently experiencing:</p>
+            
+            <div class="symptom-grid" id="symptoms-container">
+                <!-- Javascript will populate checkboxes here from /api/symptoms -->
+            </div>
+            
+            <button class="btn" id="predict-text-btn">Predict Disease</button>
+            
+            <div id="text-results" class="results-card hidden">
+                <h3 id="lbl-top-pred">Top Prediction:</h3>
+                <div class="disease-title" id="text-pred-title">--</div>
+                <div class="progress-bar-container" style="display:none;">
+                    <div class="progress-bar" id="text-pred-bar"></div>
+                </div>
+                <p id="text-pred-acc" style="font-size: 0.8rem; text-align:right; margin-bottom: 1rem;">0%</p>
+                
+                <canvas id="predictionChart" style="max-height: 250px; background: rgba(0,0,0,0.1); border-radius: 8px; margin-bottom: 1rem;"></canvas>
+
+                <div id="text-pred-details" style="font-size:0.9rem; color:var(--text-secondary)"></div>
+                
+                <div class="report-controls">
+                    <select id="text-lang-select">
+                        <option value="en">English (Default)</option>
+                        <option value="hi">Hindi</option>
+                        <option value="kn">Kannada</option>
+                    </select>
+                    <button class="btn" style="flex:1;" id="translate-text-btn"><i class="fa-solid fa-language"></i> Translate</button>
+                    <button class="btn" style="flex:1;" id="download-text-report"><i class="fa-solid fa-download"></i> PDF Report</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Modal -->
+    <div id="voice-modal" class="modal">
+        <div class="glass-panel modal-content">
+            <button class="close-btn" onclick="closeModal('voice-modal')">&times;</button>
+            <h2>Voice Analysis</h2>
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Click the microphone and describe your symptoms clearly.</p>
+            
+            <div class="text-center mt-2">
+                <button id="voice-record-btn" class="btn" style="border-radius:50%; width:80px; height:80px; margin-bottom:1rem;">
+                    <i class="fa-solid fa-microphone" style="font-size:2rem;"></i>
+                </button>
+                <p id="recording-status">Ready to Record</p>
+            </div>
+
+            <div class="mt-2" style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius:8px;">
+                <p style="font-size:0.8rem; color:var(--primary-color)">Extracted Text:</p>
+                <p id="voice-transcription-box">...</p>
+            </div>
+
+            <div id="voice-results" class="results-card hidden">
+                <h3 style="color:var(--secondary-color)">Symptoms Detected:</h3>
+                <p id="voice-detected-symptoms" style="font-size:0.9rem; margin-bottom:1rem;">None</p>
+                <button class="btn" id="analyze-voice-symptoms-btn">Compute Disease</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Library Modal -->
+    <div id="history-modal" class="modal">
+        <div class="glass-panel modal-content" style="max-width: 800px;">
+            <button class="close-btn" onclick="closeModal('history-modal')">&times;</button>
+            <h2>Prediction Library</h2>
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Your past diagnoses and predictions.</p>
+            
+            <table style="width:100%; text-align:left; border-collapse:collapse; margin-top:2rem;" id="history-table">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--glass-border); color:var(--primary-color);">
+                        <th style="padding:0.5rem;">Date</th>
+                        <th style="padding:0.5rem;">Mode</th>
+                        <th style="padding:0.5rem;">Predicted Disease</th>
+                        <th style="padding:0.5rem;">Confidence</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody" style="font-size:0.9rem;">
+                    <!-- Tr data populated iteratively -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Model Evaluation Modal -->
+    <div id="evaluation-modal" class="modal">
+        <div class="glass-panel modal-content" style="max-width: 750px;">
+            <button class="close-btn" onclick="closeModal('evaluation-modal')">&times;</button>
+            <h2>Model Evaluation & Metrics</h2>
+            <p style="color:var(--text-secondary);font-size:0.9rem;">Analyze the performance of models based on their algorithm type (Classification or Regression).</p>
+            
+            <div class="input-group mt-2">
+                <label for="eval-model-select">Select Model to Evaluate</label>
+                <select id="eval-model-select" style="width: 100%; padding: 0.8rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.4); color: white; font-family: inherit;">
+                    <option value="" disabled selected>-- Select a Model --</option>
+                    <option value="symptom_classifier">Symptom Predictor (Classification - Decision Tree)</option>
+                    <option value="skin_classifier">Skin Lesion Predictor (Classification - MobileNetV2 CNN)</option>
+                    <option value="recovery_regression">Recovery Time Predictor (Regression - Random Forest)</option>
+                </select>
+            </div>
+
+            <!-- Loader -->
+            <div id="eval-loader" class="hidden text-center" style="margin: 2rem 0;">
+                <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+                <p style="margin-top: 0.5rem; color: var(--text-secondary);">Loading evaluation data...</p>
+            </div>
+
+            <!-- Evaluation Dashboard Content -->
+            <div id="eval-dashboard" class="hidden mt-2">
+                <h3 id="eval-algorithm-title" style="color: var(--primary-color); margin-bottom: 1rem;">--</h3>
+                
+                <!-- Classification Layout -->
+                <div id="eval-classification-section" class="hidden">
+                    <div class="cm-metrics-grid">
+                        <div class="cm-metric-card">
+                            <div>Accuracy</div>
+                            <div class="cm-metric-val" id="eval-acc-val">0.0%</div>
+                        </div>
+                        <div class="cm-metric-card">
+                            <div>Precision</div>
+                            <div class="cm-metric-val" id="eval-prec-val">0.0%</div>
+                        </div>
+                        <div class="cm-metric-card">
+                            <div>Recall</div>
+                            <div class="cm-metric-val" id="eval-rec-val">0.0%</div>
+                        </div>
+                        <div class="cm-metric-card">
+                            <div>F1-Score</div>
+                            <div class="cm-metric-val" id="eval-f1-val">0.0%</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 1.5rem; color: var(--text-primary);"><i class="fa-solid fa-table-cells"></i> Confusion Matrix (Heatmap)</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Rows represent True (Actual) classes, columns represent Predicted classes. Darker colors denote higher counts.</p>
+                    
+                    <div class="cm-container" id="confusion-matrix-container">
+                        <!-- Heatmap will be dynamically populated here -->
+                    </div>
+                </div>
+
+                <!-- Regression Layout -->
+                <div id="eval-regression-section" class="hidden">
+                    <div class="cm-metrics-grid">
+                        <div class="cm-metric-card">
+                            <div>Mean Absolute Error (MAE)</div>
+                            <div class="cm-metric-val" id="eval-mae-val">0.00</div>
+                        </div>
+                        <div class="cm-metric-card">
+                            <div>Mean Squared Error (MSE)</div>
+                            <div class="cm-metric-val" id="eval-mse-val">0.00</div>
+                        </div>
+                        <div class="cm-metric-card" style="grid-column: span 2;">
+                            <div>R² (Coefficient of Determination)</div>
+                            <div class="cm-metric-val" id="eval-r2-val">0.00</div>
+                        </div>
+                    </div>
+                    
+                    <h4 style="margin-top: 1.5rem; color: var(--text-primary);"><i class="fa-solid fa-chart-line"></i> Actual vs. Predicted Plot</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Shows model prediction errors. Points close to the diagonal line represent accurate predictions.</p>
+                    
+                    <div style="background: rgba(0,0,0,0.15); border-radius: 8px; padding: 1rem; border: 1px solid var(--glass-border);">
+                        <canvas id="regressionChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js?v=5"></script>
+</body>
+</html>

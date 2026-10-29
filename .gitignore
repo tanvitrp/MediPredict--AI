@@ -1,0 +1,30 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Secrets
+.env
+.env.*
+
+# Private reports and uploads
+**/datasets/uploads/
+
+# Local databases
+*.db
+*.sqlite3
+
+# IDE settings
+.vscode/
+test.jpg
+project.zip
+# Large datasets and trained models
+skin_images/
+skin_disease_model.h5
+
+# Dataset folders inside project directories
+**/datasets/
